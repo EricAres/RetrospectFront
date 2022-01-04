@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Form, Dropdown, Input, Label, Table } from 'semantic-ui-react';
+import { Grid, Form, Dropdown, Input, Label, Table, TableCell } from 'semantic-ui-react';
 import { useSubstrate } from './substrate-lib';
 import { TxButton, TxGroupButton } from './substrate-lib/components';
 
 const argIsOptional = (arg) =>
   arg.type.toString().startsWith('Option<');
 
-function Main (props) {
+function Main(props) {
   const { api, jsonrpc } = useSubstrate();
   const { accountPair } = props;
   const [status, setStatus] = useState(null);
@@ -15,7 +15,7 @@ function Main (props) {
   const [palletRPCs, setPalletRPCs] = useState([]);
   const [callables, setCallables] = useState([]);
   const [paramFields, setParamFields] = useState([]);
-
+  const [aab, setAab] = useState({})
   const initFormState = {
     palletRpc: 'ocwExample',
     callable: 'hackerNewsInfos',
@@ -60,7 +60,7 @@ function Main (props) {
     }
 
     let paramFields = [];
-    
+
 
     if (interxType === 'QUERY') {
       const metaType = api.query[palletRpc][callable].meta.type;
@@ -136,101 +136,133 @@ function Main (props) {
       return res;
     });
   };
-  var writeUTF = function (str, isGetBytes) { 
-    var back = []; 
-    var byteSize = 0; 
-    for (var i = 0; i < str.length; i++) { 
-        var code = str.charCodeAt(i); 
-        if (0x00 <= code && code <= 0x7f) { 
-            byteSize += 1; 
-            back.push(code); 
-        } else if (0x80 <= code && code <= 0x7ff) { 
-            byteSize += 2; 
-            back.push((192 | (31 & (code >> 6)))); 
-            back.push((128 | (63 & code))) 
-        } else if ((0x800 <= code && code <= 0xd7ff) 
-            || (0xe000 <= code && code <= 0xffff)) { 
-            byteSize += 3; 
-            back.push((224 | (15 & (code >> 12)))); 
-            back.push((128 | (63 & (code >> 6)))); 
-            back.push((128 | (63 & code))) 
-        } 
-    } 
-    for (i = 0; i < back.length; i++) { 
-        back[i] &= 0xff; 
-    } 
-    if (isGetBytes) { 
-        return back 
-    } 
-    if (byteSize <= 0xff) { 
-        return [0, byteSize].concat(back); 
-    } else { 
-        return [byteSize >> 8, byteSize & 0xff].concat(back); 
-    } 
-} 
-
-
-var readUTF = function (arr) { 
-    if (typeof arr === 'string') { 
-        return arr; 
-    } 
-    var UTF = '', _arr = arr; 
-    for (var i = 0; i < _arr.length; i++) { 
-        var one = _arr[i].toString(2), 
-            v = one.match(/^1+?(?=0)/); 
-        if (v && one.length == 8) { 
-            var bytesLength = v[0].length; 
-            var store = _arr[i].toString(2).slice(7 - bytesLength); 
-            for (var st = 1; st < bytesLength; st++) { 
-                store += _arr[st + i].toString(2).slice(2) 
-            } 
-            UTF += String.fromCharCode(parseInt(store, 2)); 
-            i += bytesLength - 1 
-        } else { 
-            UTF += String.fromCharCode(_arr[i]) 
-        } 
-    } 
-    return UTF 
-} 
-
-
-
-
-var toUTF8Hex = function(str){ 
-    var charBuf = writeUTF(str, true); 
-    var re = ''; 
-    for(var i = 0; i < charBuf.length; i ++){ 
-        var x = (charBuf[i] & 0xFF).toString(16); 
-        if(x.length === 1){ 
-            x = '0' + x; 
-        } 
-        re += x; 
-    } 
-    return re; 
-} 
-
-
-var utf8HexToStr = function (str) { 
-    var buf = []; 
-    for(var i = 0; i < str.length; i += 2){ 
-        buf.push(parseInt(str.substring(i, i+2), 16)); 
-    } 
-    return readUTF(buf); 
-} 
-  function formatinfo(info)
-  {
-    debugger
-    if(info !=null&&info.startsWith('['))
-    {
-      // 说明是json格式
-      var arrParse = JSON.parse(info);
-      for(var i=0;i<arrParse.length;i++)
-      {
-        let res= utf8HexToStr (arrParse[i].ph)+utf8HexToStr (arrParse[i].ms) ;
-        return res;
+  var writeUTF = function (str, isGetBytes) {
+    var back = [];
+    var byteSize = 0;
+    for (var i = 0; i < str.length; i++) {
+      var code = str.charCodeAt(i);
+      if (0x00 <= code && code <= 0x7f) {
+        byteSize += 1;
+        back.push(code);
+      } else if (0x80 <= code && code <= 0x7ff) {
+        byteSize += 2;
+        back.push((192 | (31 & (code >> 6))));
+        back.push((128 | (63 & code)))
+      } else if ((0x800 <= code && code <= 0xd7ff)
+        || (0xe000 <= code && code <= 0xffff)) {
+        byteSize += 3;
+        back.push((224 | (15 & (code >> 12))));
+        back.push((128 | (63 & (code >> 6))));
+        back.push((128 | (63 & code)))
       }
     }
-    return "a:"+info;
+    for (i = 0; i < back.length; i++) {
+      back[i] &= 0xff;
+    }
+    if (isGetBytes) {
+      return back
+    }
+    if (byteSize <= 0xff) {
+      return [0, byteSize].concat(back);
+    } else {
+      return [byteSize >> 8, byteSize & 0xff].concat(back);
+    }
+  }
+
+
+  var readUTF = function (arr) {
+    if (typeof arr === 'string') {
+      return arr;
+    }
+    var UTF = '', _arr = arr;
+    for (var i = 0; i < _arr.length; i++) {
+      var one = _arr[i].toString(2),
+        v = one.match(/^1+?(?=0)/);
+      if (v && one.length == 8) {
+        var bytesLength = v[0].length;
+        var store = _arr[i].toString(2).slice(7 - bytesLength);
+        for (var st = 1; st < bytesLength; st++) {
+          store += _arr[st + i].toString(2).slice(2)
+        }
+        UTF += String.fromCharCode(parseInt(store, 2));
+        i += bytesLength - 1
+      } else {
+        UTF += String.fromCharCode(_arr[i])
+      }
+    }
+    return UTF
+  }
+
+
+
+
+  var toUTF8Hex = function (str) {
+    var charBuf = writeUTF(str, true);
+    var re = '';
+    for (var i = 0; i < charBuf.length; i++) {
+      var x = (charBuf[i] & 0xFF).toString(16);
+      if (x.length === 1) {
+        x = '0' + x;
+      }
+      re += x;
+    }
+    return re;
+  }
+
+
+  var utf8HexToStr = function (str) {
+    var buf = [];
+    for (var i = 0; i < str.length; i += 2) {
+      buf.push(parseInt(str.substring(i, i + 2), 16));
+    }
+    return readUTF(buf);
+  }
+  function formatinfo(info) {
+    if (info != null && info.startsWith('[')) {
+      // 说明是json格式
+      var arrParse = JSON.parse(info);
+        return (
+          <div>
+            <Table celled >
+              <Table.Header>
+                <h2>Tracer recode:{ }</h2>
+                <Table.Row>
+                  <Table.HeaderCell width={3} >
+                    <strong>DateTime</strong>
+                  </Table.HeaderCell>
+                  <Table.HeaderCell width={10}>
+                    <strong>Type</strong>
+                  </Table.HeaderCell>
+                  <Table.HeaderCell width={3}>
+                    <strong>Desc</strong>
+                  </Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
+
+              <Table.Body>
+                
+              {arrParse.map((item,index)=>{
+                return (
+                <Table.Row key={index}>
+                <Table.Cell width={3} >
+                { utf8HexToStr(item.sj)}
+                </Table.Cell>
+                <Table.Cell width={3} key={index}>
+                { utf8HexToStr(item.lb)}
+               </Table.Cell>
+               <Table.Cell width={3} key={index}>
+               { utf8HexToStr(item.ms)}
+              </Table.Cell>
+              </Table.Row>
+                )
+              })}
+                
+              </Table.Body>
+            </Table>
+          </div>
+      );
+    }
+    return "a:" + info;
   }
 
   const onInterxTypeChange = (ev, data) => {
@@ -246,7 +278,7 @@ var utf8HexToStr = function (str) {
 
   return (
     <Grid.Column width={20}>
-      <h1>Pallet Interactor</h1>
+      <h1>Retrospect Interactor</h1>
       <Form>
         <Form.Group style={{ overflowX: 'auto' }} inline>
           <label>Interaction Type</label>
@@ -270,9 +302,9 @@ var utf8HexToStr = function (str) {
             value={palletRpc}
             options={palletRPCs}
           /> */}
-          <input type="text" placeholder="Pallets / RPC" value={palletRPCs.value} hidden/>
+          <input type="text" placeholder="Pallets / RPC" value={palletRPCs.value} hidden />
         </Form.Field>
-        <Form.Field style={{display:'none'}}>
+        <Form.Field style={{ display: 'none' }}>
           <Dropdown
             placeholder='Callables'
             fluid
@@ -283,7 +315,7 @@ var utf8HexToStr = function (str) {
             state='callable'
             value={callable}
             options={callables}
-          hidden />
+            hidden />
         </Form.Field>
         {paramFields.map((paramField, ind) =>
           <Form.Field key={`${paramField.name}-${paramField.type}`}>
@@ -293,18 +325,18 @@ var utf8HexToStr = function (str) {
               type='text'
               label={paramField.name}
               state={{ ind, paramField }}
-              value={ inputParams[ind] ? inputParams[ind].value : '' }
+              value={inputParams[ind] ? inputParams[ind].value : ''}
               onChange={onPalletCallableParamChange}
             />
-            { paramField.optional
+            {paramField.optional
               ? <Label
                 basic
                 pointing
                 color='teal'
-                content = { getOptionalMsg(interxType)}
+                content={getOptionalMsg(interxType)}
               />
               : null
-            } 
+            }
           </Form.Field>
         )}
         <Form.Field style={{ textAlign: 'center' }}>
@@ -314,69 +346,45 @@ var utf8HexToStr = function (str) {
             attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
           />
         </Form.Field>
-        { <div style={{ overflowWrap: 'break-word' }}>{status}</div> /**/}
+        {<div style={{ overflowWrap: 'break-word' }}></div> /**/}
 
-        { <div style={{ overflowWrap: 'break-word' }}>
+        {/* { <div style={{ overflowWrap: 'break-word' }}>
           
-          {formatinfo(status)}</div> /**/}
-  <Table celled >
-    <Table.Header>
-    <h2>Tracer recode:{}</h2>
-      <Table.Row>
-      
-        <Table.HeaderCell width={3} textAlign='right'>
-              <strong>DateTime</strong>
-            </Table.HeaderCell>
-            <Table.HeaderCell width={10}>
-              <strong>Type</strong>
-            </Table.HeaderCell>
-            <Table.HeaderCell width={3}>
-              <strong>Desc</strong>
-            </Table.HeaderCell>
-      </Table.Row>
-    </Table.Header>
-    <Table.Body>
-           <Table.Row>
-          
-          </Table.Row>
-      { [status].map((item, index) => {
-        return (
-        <Table.Row key={index}>
-        <Table.Cell>
-          {/* {item} */}aa
-        </Table.Cell>
-      </Table.Row>
-        );
-      })}
-    </Table.Body>
-  </Table>
+          {formatinfo(status)}</div> /**/ }
+        <div>
+          {[formatinfo(status)].map((item, index) => {
+            return (
+              <div key={index}>{item}</div>
+            )
+          })}
+        </div>
       </Form>
     </Grid.Column>
   );
 }
 
-function InteractorSubmit (props) {
+function InteractorSubmit(props) {
   const { attrs: { interxType } } = props;
   if (interxType === 'QUERY') {
     return <TxButton
-      label = 'Query'
-      type = 'QUERY'
-      color = 'blue'
+      label='Query'
+      type='QUERY'
+      color='blue'
       {...props}
     />;
   } else if (interxType === 'EXTRINSIC') {
     return <TxGroupButton {...props} />;
   } else if (interxType === 'RPC' || interxType === 'CONSTANT') {
     return <TxButton
-      label = 'Submit'
-      type = {interxType}
-      color = 'blue'
+      label='Submit'
+      type={interxType}
+      color='blue'
       {...props}
     />;
   }
 }
- 
-export default function Infoquery (props) {
+
+export default function Infoquery(props) {
   const { api } = useSubstrate();
   return api.tx ? <Main {...props} /> : null;
 }
