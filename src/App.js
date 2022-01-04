@@ -10,9 +10,10 @@ import Balances from './Balances';
 import BlockNumber from './BlockNumber';
 import Events from './Events';
 import Interactor from './Interactor';
+// import OracleRequst from './OracleRequest';
+import Infoquery from './Infoquery';
 import Metadata from './Metadata';
-import NodeInfo from './NodeInfo';
-import TemplateModule from './TemplateModule';
+import NodeInfo from './NodeInfo'; 
 import Transfer from './Transfer';
 import Upgrade from './Upgrade';
 
@@ -66,16 +67,20 @@ function Main () {
             <Events />
           </Grid.Row>
           <Grid.Row stretched>
+            <Infoquery />
+          </Grid.Row>
+          <Grid.Row stretched>
             <Balances />
           </Grid.Row>
+ 
           {/* <Grid.Row>
             <Transfer accountPair={accountPair} />
             <Upgrade accountPair={accountPair} />
           </Grid.Row> */}
          
-          <Grid.Row>
+          {/* <Grid.Row>
             <TemplateModule accountPair={accountPair} />
-          </Grid.Row>
+          </Grid.Row> */}
         </Grid>
       </Container>
       <DeveloperConsole />
